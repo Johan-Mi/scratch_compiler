@@ -1,11 +1,24 @@
-use crate::target::*;
+use crate::block::*;
+use crate::costume::*;
+use crate::id::*;
+use crate::sound::*;
 use serde::Serialize;
+use serde_json::Value;
+use std::collections::HashMap;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Sprite {
-    #[serde(flatten)]
-    pub shared: SharedTarget,
+    is_stage: bool,
+    name: String,
+    variables: HashMap<ID, (String, Value)>,
+    lists: HashMap<ID, (String, Vec<Value>)>,
+    broadcasts: HashMap<ID, String>,
+    blocks: HashMap<ID, Block>,
+    pub costumes: Vec<Costume>,
+    sounds: Vec<Sound>,
+    volume: i32,
+    layer_order: i32,
 
     visible: bool,
     x: i32,
