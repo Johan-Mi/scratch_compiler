@@ -8,7 +8,6 @@ mod sound;
 mod sprite;
 mod stage;
 mod target;
-mod value;
 use project::*;
 use stage::*;
 use target::*;
