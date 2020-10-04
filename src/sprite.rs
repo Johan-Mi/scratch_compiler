@@ -4,7 +4,9 @@ use serde::Serialize;
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Sprite {
-    shared: SharedTarget,
+    #[serde(flatten)]
+    pub shared: SharedTarget,
+
     visible: bool,
     x: i32,
     y: i32,
