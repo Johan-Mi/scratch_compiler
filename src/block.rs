@@ -13,8 +13,12 @@ pub struct Block {
     fields: HashMap<String, (Value, Option<ID>)>,
     shadow: bool,
     top_level: bool,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     x: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     y: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     mutation: Option<Mutation>,
 }
 

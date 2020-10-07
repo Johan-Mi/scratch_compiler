@@ -28,8 +28,8 @@ impl SharedAsset {
         self.data_format = Path::new(&self.name)
             .extension()
             .and_then(OsStr::to_str)
-            .unwrap()
-            .to_string();
+            .map(String::from)
+            .unwrap();
         self.md5ext = format!("{}.{}", self.asset_id, self.data_format);
     }
 }
