@@ -14,7 +14,7 @@ pub struct Stage {
     variables: HashMap<ID, (String, Value)>,
     lists: HashMap<ID, (String, Vec<Value>)>,
     broadcasts: HashMap<ID, String>,
-    blocks: HashMap<ID, Block>,
+    pub blocks: Vec<Block>,
     pub costumes: Vec<Costume>,
     sounds: Vec<Sound>,
     volume: i32,
@@ -29,19 +29,11 @@ impl Stage {
             variables: HashMap::new(),
             lists: HashMap::new(),
             broadcasts: HashMap::new(),
-            blocks: HashMap::new(),
+            blocks: Vec::new(),
             costumes: Vec::new(),
             sounds: Vec::new(),
             volume: 0,
             layer_order: 0,
         }
     }
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "kebab-case")]
-enum VideoState {
-    Off,
-    On,
-    OnFlipped,
 }

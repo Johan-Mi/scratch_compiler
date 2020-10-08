@@ -9,6 +9,7 @@ mod sound;
 mod sprite;
 mod stage;
 mod target;
+use block::*;
 use costume::*;
 use project::*;
 use stage::*;
@@ -44,10 +45,19 @@ fn create_sb3(project: &Project) -> zip::result::ZipResult<()> {
 fn main() {
     let mut project = Project::new();
     let mut stage = Stage::new();
+
+    let mut b = Block::new();
+    b.top_level = true;
+    b.x = Some(0);
+    b.y = Some(0);
+    b.opcode = "event_whenflagclicked".to_string();
+    stage.blocks.push(b);
+
     stage
         .costumes
         .push(Costume::new("resources/empty_costume.svg".to_string()));
     stage.costumes[0].resolve();
+
     project.targets.push(Target::Stage(stage));
 
     create_sb3(&project).unwrap();
