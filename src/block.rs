@@ -1,66 +1,45 @@
 use crate::id::*;
-use crate::primitive::*;
+use crate::match_variants;
+use serde::ser::Serializer;
 use serde::Serialize;
-use serde_json::Value;
 use std::boxed::Box;
-use std::collections::HashMap;
 
 #[derive(Serialize)]
-pub struct Block {
-    id: ID,
-
-    pub opcode: String,
-    next: Option<Box<Block>>,
-    // parent: Option<ID>, // TODO
-    inputs: HashMap<String, BlockInput>,
-    fields: HashMap<String, (Value, Option<Box<Block>>)>,
-    shadow: bool,
-    pub top_level: bool,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub x: Option<i32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub y: Option<i32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    mutation: Option<Mutation>,
+#[serde(tag = "opcode")]
+pub enum Block {
+    #[serde(rename = "event_onflagclicked")]
+    OnFlagClicked(OnFlagClicked),
 }
 
 impl Block {
-    pub fn new() -> Self {
-        Self {
-            id: new_id(),
-            opcode: String::new(),
-            next: None,
-            inputs: HashMap::new(),
-            fields: HashMap::new(),
-            shadow: false,
-            top_level: false,
-            x: None,
-            y: None,
-            mutation: None,
-        }
+    pub fn id(&self) -> &ID {
+        match_variants!(self,
+                        Block { OnFlagClicked },
+                        b => &b.id)
     }
 }
 
-#[derive(Serialize)]
-struct BlockInput {
-    shadow_state: i32,
-    input: PrimitiveOrID,
-    shadow_value: Option<ID>,
+fn serialize_block_id<S>(
+    block_box: &Option<Box<Block>>,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    block_box.as_ref().map(|b| b.id()).serialize(serializer)
 }
 
 #[derive(Serialize)]
-enum PrimitiveOrID {
-    ID(ID),
-    Primitive(Primitive),
+pub struct OnFlagClicked {
+    #[serde(skip)]
+    id: ID,
+
+    #[serde(serialize_with = "serialize_block_id")]
+    next: Option<Box<Block>>,
 }
 
-#[derive(Serialize)]
-struct Mutation {
-    tag_name: String,
-    children: Vec<ID>,
-    proccode: String,
-    argumentids: String,
-    warp: Option<bool>,
-    hasnext: Option<bool>,
+impl OnFlagClicked {
+    pub fn new(next: Option<Box<Block>>) -> Self {
+        Self { id: new_id(), next }
+    }
 }

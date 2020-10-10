@@ -2,6 +2,8 @@ mod asset;
 mod block;
 mod costume;
 mod id;
+#[macro_use]
+mod match_variants;
 mod monitor;
 mod primitive;
 mod project;
@@ -46,12 +48,9 @@ fn main() {
     let mut project = Project::new();
     let mut stage = Stage::new();
 
-    let mut b = Block::new();
-    b.top_level = true;
-    b.x = Some(0);
-    b.y = Some(0);
-    b.opcode = "event_whenflagclicked".to_string();
-    stage.blocks.push(b);
+    stage
+        .blocks
+        .push(Block::OnFlagClicked(OnFlagClicked::new(None)));
 
     stage
         .costumes
