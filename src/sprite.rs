@@ -14,7 +14,8 @@ pub struct Sprite {
     variables: HashMap<ID, (String, Value)>,
     lists: HashMap<ID, (String, Vec<Value>)>,
     broadcasts: HashMap<ID, String>,
-    blocks: HashMap<ID, Block>,
+    #[serde(serialize_with = "serialize_block_vec")]
+    blocks: Vec<Block>,
     pub costumes: Vec<Costume>,
     sounds: Vec<Sound>,
     volume: i32,

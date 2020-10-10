@@ -50,7 +50,7 @@ fn main() {
 
     stage
         .blocks
-        .push(Block::OnFlagClicked(OnFlagClicked::new(None)));
+        .push(Block::WhenFlagClicked(WhenFlagClicked::new(None)));
 
     stage
         .costumes
