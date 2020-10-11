@@ -1,3 +1,4 @@
+use crate::block_types::*;
 use crate::id::*;
 use crate::match_variants;
 use serde::ser::{SerializeMap, SerializeStruct, Serializer};
@@ -6,12 +7,13 @@ use std::boxed::Box;
 
 pub enum Block {
     WhenFlagClicked(WhenFlagClicked),
+    WhenThisSpriteClicked(WhenThisSpriteClicked),
 }
 
 impl Block {
     pub fn id(&self) -> &ID {
         match_variants!(self,
-                        Block { WhenFlagClicked },
+                        Block { WhenFlagClicked, WhenThisSpriteClicked },
                         b => &b.id)
     }
 
@@ -28,7 +30,7 @@ impl Block {
         S: Serializer,
     {
         match_variants!(self,
-                        Block { WhenFlagClicked },
+                        Block { WhenFlagClicked, WhenThisSpriteClicked },
                         b => b.serialize_with_parent(parent, serializer))
     }
 }
@@ -77,6 +79,11 @@ impl<'a> Iterator for BlockIter<'a> {
                     self.stack.push((&n, Some(&b.id)));
                 }
             }
+            Block::WhenThisSpriteClicked(b) => {
+                if let Some(n) = &b.next {
+                    self.stack.push((&n, Some(&b.id)));
+                }
+            }
         }
 
         Some(retval)
@@ -97,17 +104,13 @@ impl<'a> Serialize for BlockAndParent<'a> {
     }
 }
 
-pub struct WhenFlagClicked {
-    id: ID,
-    next: Option<Box<Block>>,
-}
+pub trait SimpleHatBlock {
+    const OPCODE: &'static str;
 
-impl WhenFlagClicked {
-    pub fn new(next: Option<Box<Block>>) -> Self {
-        Self { id: new_id(), next }
-    }
+    fn get_id(&self) -> &ID;
+    fn get_next(&self) -> &Option<Box<Block>>;
 
-    pub fn serialize_with_parent<S>(
+    fn serialize_with_parent<S>(
         &self,
         parent: Option<&ID>,
         serializer: S,
@@ -117,11 +120,11 @@ impl WhenFlagClicked {
     {
         let field_count = if parent.is_none() { 6 } else { 3 };
         let mut obj =
-            serializer.serialize_struct("WhenFlagClicked", field_count)?;
+            serializer.serialize_struct("SimpleHatBlock", field_count)?;
 
-        obj.serialize_field("opcode", "event_whenflagclicked")?;
+        obj.serialize_field("opcode", Self::OPCODE)?;
         obj.serialize_field("parent", &parent)?;
-        obj.serialize_field("next", &self.next.as_ref().map(|b| b.id()))?;
+        obj.serialize_field("next", &self.get_next().as_ref().map(|b| b.id()))?;
         if parent.is_none() {
             obj.serialize_field("topLevel", &true)?;
             obj.serialize_field("x", &0)?;

@@ -4,6 +4,7 @@ mod costume;
 mod id;
 #[macro_use]
 mod match_variants;
+mod block_types;
 mod monitor;
 mod primitive;
 mod project;
@@ -12,11 +13,14 @@ mod sprite;
 mod stage;
 mod target;
 use block::*;
+use block_types::*;
 use costume::*;
 use project::*;
 use stage::*;
 use std::fs;
 use target::*;
+#[macro_use]
+extern crate derive_block_types;
 
 fn create_sb3(project: &Project) -> zip::result::ZipResult<()> {
     use std::io::Write;
