@@ -14,7 +14,7 @@ pub struct Stage {
     variables: HashMap<ID, (String, Value)>,
     lists: HashMap<ID, (String, Vec<Value>)>,
     broadcasts: HashMap<ID, String>,
-    #[serde(serialize_with = "serialize_block_vec")]
+    #[serde(serialize_with = "serialize_block_slice")]
     pub blocks: Vec<Block>,
     pub costumes: Vec<Costume>,
     sounds: Vec<Sound>,

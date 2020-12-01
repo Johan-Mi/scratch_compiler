@@ -1,5 +1,5 @@
 [package]
-name = "derive_block_types"
+name = "derive_opcode"
 version = "0.1.0"
 authors = ["Johan-Mi <johanmi@protonmail.com>"]
 edition = "2018"

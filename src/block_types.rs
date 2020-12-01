@@ -1,30 +1,45 @@
 use crate::block::*;
 use crate::id::*;
+use serde::ser::SerializeMap;
 
-#[derive(SimpleHatBlock)]
+#[opcode("event_whenflagclicked")]
+#[derive(SerializeNext)]
 pub struct WhenFlagClicked {
     pub id: ID,
     pub next: Option<Box<Block>>,
 }
 
 impl WhenFlagClicked {
-    const OPCODE: &'static str = "event_whenflagclicked";
-
     pub fn new(next: Option<Box<Block>>) -> Self {
         Self { id: new_id(), next }
     }
+
+    pub fn push_next<'a>(&'a self, stack: &mut BlockIterStack<'a>) {
+        if let Some(next) = &self.next {
+            stack.push((next, Some(&self.id)));
+        }
+    }
 }
 
-#[derive(SimpleHatBlock)]
+impl SerializableBlock for WhenFlagClicked {}
+
+#[opcode("event_whenthisspriteclicked")]
+#[derive(SerializeNext)]
 pub struct WhenThisSpriteClicked {
     pub id: ID,
     pub next: Option<Box<Block>>,
 }
 
 impl WhenThisSpriteClicked {
-    const OPCODE: &'static str = "event_whenthisspriteclicked";
-
     pub fn new(next: Option<Box<Block>>) -> Self {
         Self { id: new_id(), next }
     }
+
+    pub fn push_next<'a>(&'a self, stack: &mut BlockIterStack<'a>) {
+        if let Some(next) = &self.next {
+            stack.push((next, Some(&self.id)));
+        }
+    }
 }
+
+impl SerializableBlock for WhenThisSpriteClicked {}

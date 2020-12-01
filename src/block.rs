@@ -1,9 +1,8 @@
 use crate::block_types::*;
 use crate::id::*;
 use crate::match_variants;
-use serde::ser::{SerializeMap, SerializeStruct, Serializer};
+use serde::ser::{SerializeMap, Serializer};
 use serde::Serialize;
-use std::boxed::Box;
 
 pub enum Block {
     WhenFlagClicked(WhenFlagClicked),
@@ -35,8 +34,8 @@ impl Block {
     }
 }
 
-pub fn serialize_block_vec<S>(
-    blocks: &Vec<Block>,
+pub fn serialize_block_slice<S>(
+    blocks: &[Block],
     serializer: S,
 ) -> Result<S::Ok, S::Error>
 where
@@ -55,8 +54,10 @@ where
     map.end()
 }
 
+pub type BlockIterStack<'a> = Vec<(&'a Block, Option<&'a ID>)>;
+
 pub struct BlockIter<'a> {
-    stack: Vec<(&'a Block, Option<&'a ID>)>,
+    stack: BlockIterStack<'a>,
 }
 
 impl<'a> BlockIter<'a> {
@@ -72,20 +73,9 @@ impl<'a> Iterator for BlockIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let retval = self.stack.pop()?;
-
-        match retval.0 {
-            Block::WhenFlagClicked(b) => {
-                if let Some(n) = &b.next {
-                    self.stack.push((&n, Some(&b.id)));
-                }
-            }
-            Block::WhenThisSpriteClicked(b) => {
-                if let Some(n) = &b.next {
-                    self.stack.push((&n, Some(&b.id)));
-                }
-            }
-        }
-
+        match_variants!(retval.0,
+                        Block { WhenFlagClicked, WhenThisSpriteClicked },
+                        b => b.push_next(&mut self.stack));
         Some(retval)
     }
 }
@@ -104,12 +94,20 @@ impl<'a> Serialize for BlockAndParent<'a> {
     }
 }
 
-pub trait SimpleHatBlock {
+pub trait Opcode {
     const OPCODE: &'static str;
+}
 
-    fn get_id(&self) -> &ID;
-    fn get_next(&self) -> &Option<Box<Block>>;
+pub trait SerializeNext {
+    fn serialize_next<S>(&self, _obj: &mut S) -> Result<(), S::Error>
+    where
+        S: SerializeMap,
+    {
+        Ok(())
+    }
+}
 
+pub trait SerializableBlock: Opcode + SerializeNext {
     fn serialize_with_parent<S>(
         &self,
         parent: Option<&ID>,
@@ -118,19 +116,29 @@ pub trait SimpleHatBlock {
     where
         S: Serializer,
     {
-        let field_count = if parent.is_none() { 6 } else { 3 };
-        let mut obj =
-            serializer.serialize_struct("SimpleHatBlock", field_count)?;
+        let mut obj = serializer.serialize_map(None)?;
 
-        obj.serialize_field("opcode", Self::OPCODE)?;
-        obj.serialize_field("parent", &parent)?;
-        obj.serialize_field("next", &self.get_next().as_ref().map(|b| b.id()))?;
-        if parent.is_none() {
-            obj.serialize_field("topLevel", &true)?;
-            obj.serialize_field("x", &0)?;
-            obj.serialize_field("y", &0)?;
-        }
+        obj.serialize_entry("opcode", Self::OPCODE)?;
+        self.serialize_parent(&mut obj, parent)?;
+        self.serialize_next(&mut obj)?;
 
         obj.end()
+    }
+
+    fn serialize_parent<S>(
+        &self,
+        obj: &mut S,
+        parent: Option<&ID>,
+    ) -> Result<(), S::Error>
+    where
+        S: SerializeMap,
+    {
+        obj.serialize_entry("parent", &parent)?;
+        if parent.is_none() {
+            obj.serialize_entry("topLevel", &true)?;
+            obj.serialize_entry("x", &0)?;
+            obj.serialize_entry("y", &0)?;
+        }
+        Ok(())
     }
 }
